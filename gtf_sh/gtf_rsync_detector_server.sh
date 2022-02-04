@@ -209,6 +209,9 @@ echo "GoToFly(JK): Starting synchronization of data..."
 echo "GoToFly(JK):   Source       : ${GTF_RSYNC_SRC}"
 echo "GoToFly(JK):   Desitination : ${GTF_RSYNC_DST}"
 
+GTF_RSYNC_DST_MIC_PATH_PATTERN="${GTF_RSYNC_DST}/${GTF_SYSTEM_DST_MIC_FILE_NAME_PATTERN}"
+if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_RSYNC_DST_MIC_PATH_PATTERN=${GTF_RSYNC_DST_MIC_PATH_PATTERN}"; fi
+
 # NOTE 2021/09/19 These should be stored in configuration file
 GTF_STATUS_CHECK_INTERVAL=${GTF_SYSTEM_STATUS_CHECK_INTERVAL} # in seconds
 GTF_STATUS_DISPLAY_INTERVAL=${GTF_SYSTEM_STATUS_DISPLAY_INTERVAL} # number of micrograph movies
@@ -237,6 +240,7 @@ if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_TIME_OU
 GTF_START_SEC_DATE=`date +%s` # in seconds
 GTF_PREVIOUS_NEWEST_FILE_SEC_DATE=${GTF_START_SEC_DATE} # in seconds. Initialized with start time.
 NO_UPDATE_DURATION=0 # in seconds. Initialized with zero.
+GTF_PREVIOUS_STATUS_DISPLAY_INTERVAL_COUNTS=-1
 if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_START_SEC_DATE=${GTF_START_SEC_DATE}"; fi
 if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_PREVIOUS_NEWEST_FILE_SEC_DATE=${GTF_PREVIOUS_NEWEST_FILE_SEC_DATE}"; fi
 while :
@@ -250,24 +254,33 @@ do
         echo "GoToFly(JK): Exiting(1)..."
         exit 1
     }
-    GTF_MICROGRAPH_COUNTS=`ls -l ${GTF_RSYNC_DST}/${GTF_MIC_FILE_PATTERN} | wc -l`
-    if [ $(( ${GTF_MICROGRAPH_COUNTS} % ${GTF_STATUS_DISPLAY_INTERVAL})) -eq 0]; then
+    
+    GTF_MICROGRAPH_COUNTS=`ls -l ${GTF_RSYNC_DST_MIC_PATH_PATTERN} | wc -l`
+    GTF_CURRENT_STATUS_DISPLAY_INTERVAL_COUNTS=$(( ${GTF_MICROGRAPH_COUNTS} / ${GTF_STATUS_DISPLAY_INTERVAL} ))
+    if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_MICROGRAPH_COUNTS=${GTF_MICROGRAPH_COUNTS}"; fi
+    if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_PREVIOUS_STATUS_DISPLAY_INTERVAL_COUNTS=${GTF_PREVIOUS_STATUS_DISPLAY_INTERVAL_COUNTS}"; fi
+    if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_CURRENT_STATUS_DISPLAY_INTERVAL_COUNTS=${GTF_CURRENT_STATUS_DISPLAY_INTERVAL_COUNTS}"; fi
+    if [[ ${GTF_CURRENT_STATUS_DISPLAY_INTERVAL_COUNTS} -gt ${GTF_PREVIOUS_STATUS_DISPLAY_INTERVAL_COUNTS} ]]; then
         echo "GoToFly(JK): Transfered ${GTF_MICROGRAPH_COUNTS} micrograph movies so far..."
+        GTF_PREVIOUS_STATUS_DISPLAY_INTERVAL_COUNTS=${GTF_CURRENT_STATUS_DISPLAY_INTERVAL_COUNTS}
     fi
     
     # It is done when update did not happen for certain period of time
-    GTF_CURRENT_NEWSET_FILE_PATH=`ls -rt ${GTF_RSYNC_DST}/${GTF_MIC_FILE_PATTERN} | tail -n 1`
+    ### GTF_CURRENT_NEWSET_FILE_NAME=`ls -rt ${GTF_RSYNC_DST_MIC_PATH_PATTERN} | tail -n 1`
+    ### GTF_CURRENT_NEWSET_FILE_PATH="${GTF_RSYNC_DST}/${GTF_CURRENT_NEWSET_FILE_NAME}"
+    GTF_CURRENT_NEWSET_FILE_PATH=`ls -rt ${GTF_RSYNC_DST_MIC_PATH_PATTERN} | tail -n 1`
     GTF_CURRENT_NEWEST_FILE_SEC_DATE=`date -r ${GTF_CURRENT_NEWSET_FILE_PATH} +%s`
     GTF_UPDATE_ELAPSED_SEC=$((GTF_CURRENT_NEWEST_FILE_SEC_DATE-GTF_PREVIOUS_NEWEST_FILE_SEC_DATE))
     GTF_PREVIOUS_NEWEST_FILE_SEC_DATE=${GTF_CURRENT_NEWEST_FILE_SEC_DATE}
     
+    ### if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_CURRENT_NEWSET_FILE_NAME=${GTF_CURRENT_NEWSET_FILE_NAME}"; fi
     if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_CURRENT_NEWSET_FILE_PATH=${GTF_CURRENT_NEWSET_FILE_PATH}"; fi
     if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_CURRENT_NEWEST_FILE_SEC_DATE=${GTF_CURRENT_NEWEST_FILE_SEC_DATE}"; fi
     if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_UPDATE_ELAPSED_SEC=${GTF_UPDATE_ELAPSED_SEC}"; fi
     
     if [ ${GTF_UPDATE_ELAPSED_SEC} -eq 0 ]; then
         let NO_UPDATE_DURATION+=GTF_STATUS_CHECK_INTERVAL
-        echo "GoToFly(JK): Update has not been detected for ${NO_UPDATE_DURATION}"
+        echo "GoToFly(JK): Update has not been detected for ${NO_UPDATE_DURATION} seconds"
         
         if [ ${NO_UPDATE_DURATION} -gt ${GTF_TIME_OUT_NO_UPDATE} ]; then
             echo "GoToFly(JK): [GTF_WARNINNG] No update is detected for specified duration: ${GTF_TIME_OUT_NO_UPDATE} seconds"
@@ -277,6 +290,12 @@ do
             break
         fi
     else
+        if [ ${GTF_UPDATE_ELAPSED_SEC} -lt 0 ]; then
+            let NO_UPDATE_DURATION+=GTF_STATUS_CHECK_INTERVAL
+            if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] The latest file has been saved before starting this script!"; fi
+            if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] Meaning this iteration is first rsync or this session has been transferred already."; fi
+            if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] Just ignore this case!"; fi
+        fi
         if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] Update is detected! "; fi
         if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] The last file of the current synchronization was updated in ${GTF_UPDATE_ELAPSED_SEC} seconds after the last"; fi
         # Initialize NO_UPDATE_DURATION to zero
