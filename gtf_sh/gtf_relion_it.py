@@ -126,14 +126,14 @@ RelionItOptions = {
 
     ### General parameters
     # Pixel size in Angstroms in the input movies
-    'prep__importmovies__angpix' : 0.88, # <- 'prep__importmovies__angpix' : 0.885,
+    'prep__importmovies__angpix' : 0.84, # <- 'prep__importmovies__angpix' : 0.885,
     # Acceleration voltage (in kV)
     'prep__importmovies__kV' : 200,
     # Polara = 2.0; Talos/Krios = 2.7; some Cryo-ARM = 1.4 
     'prep__importmovies__Cs' : 2.7, # <-'prep__importmovies__Cs' : 1.4,
 
     ### Import images (Linux wild card; movies as *.mrc, *.mrcs, *.tiff or *.tif; single-frame micrographs as *.mrc)
-    'prep__importmovies__fn_in_raw' : 'Micrographs/*.mrc', # <- 'prep__importmovies__fn_in_raw' : 'Movies/*.tiff',
+    'prep__importmovies__fn_in_raw' : 'Micrographs/*.eer', # <- 'prep__importmovies__fn_in_raw' : 'Movies/*.tiff',
     # Are these multi-frame movies? Set to False for single-frame micrographs (and motion-correction will be skipped)
     'prep__importmovies__is_multiframe' : True,
 
@@ -141,9 +141,9 @@ RelionItOptions = {
     # Dose in electrons per squared Angstrom per fraction
     'prep__motioncorr__dose_per_frame' : 1.0, # <-'prep__motioncorr__dose_per_frame' : 1.277,
     # Gain-reference image in MRC format (only necessary if input movies are not yet gain-corrected, e.g. compressed TIFFs from K2)
-    'prep__motioncorr__fn_gain_ref' : '', # <- 'prep__motioncorr__fn_gain_ref' : 'Movies/gain.mrc',
+    'prep__motioncorr__fn_gain_ref' : 'EER_GainReference.gain', # <- 'prep__motioncorr__fn_gain_ref' : 'Movies/gain.mrc',
     # EER fractionation. The dose rate (motioncor_doseperframe) is e/A2/fraction after this fractionation.
-    'prep__motioncorr__eer_grouping' : 20,
+    'prep__motioncorr__eer_grouping' : 24,
     # For super-resolution movies, bin by factor of 2 straight away, as we don't believe in super-resolution
     'prep__motioncorr__bin_factor' : 1,
     # Number of threads to use for Relioncor2

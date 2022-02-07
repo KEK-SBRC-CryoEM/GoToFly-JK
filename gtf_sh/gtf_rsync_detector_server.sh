@@ -15,89 +15,6 @@
 #   gtf_rsync_detector_server_debug.sh
 # 
 << DEBUG_NOTES
-==========================================================================================
-# DEBUG 2021/09/19 Use the following on-going session for debugging
-==========================================================================================
-# GTF_RSYNC_SRC = /media/test/falcon3/supervisor_20210917_160225/Images-Disc1/GridSquare_17299856/Data/*.mrc
-# GTF_RSYNC_DST = /gpfs/data/EM/mrk_spa/20210917_MRK_DEBUG/Micrographs
-
-==========================================================================================
-Execute rsync without password (RSA key exchange method)
-https://www.tama-negi.com/2020/02/24/rsync/
-==========================================================================================
-[*] Set access permission of ikeda-em directory using emadimin account
-$ ssh -Y emadmin@cryoem-work06.kek.jp
-<PASSWORD>
-$ cd /gpfs/home
-$ ls -ld ikeda-em
-drwxrwx---+ 22 ikeda-em ikeda-em 4096  9月 23 17:45 ikeda-em
-$ chmod 750 ikeda-em
-$ ls -ld ikeda-em
-drwxr-x---+ 22 ikeda-em ikeda-em 4096  9月 23 17:45 ikeda-em
-$ exit
-
-[*] Create RAS key pair (set of private and public keys) on server B (reciever)
-$ ssh -Y ikeda-em@cryoem-work06.kek.jp
-<PASSWORD>
-$ 
-$ ls -l ~/.ssh
-$ 
-$ ssh-keygen -t rsa -C " -N " -f ~/.ssh/id_rsa
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-Generating public/private rsa key pair.
-Enter passphrase (empty for no passphrase): [EMPTY & RETURN]
-Enter same passphrase again:  [EMPTY & RETURN]
-Your identification has been saved in /gpfs/home/ikeda-em/.ssh/id_rsa.
-Your public key has been saved in /gpfs/home/ikeda-em/.ssh/id_rsa.pub.
-The key fingerprint is:
-SHA256:ReGeCVwcWoVKqfdv1mZAsNjZhxDxyjTXc0/jeIVjeKQ  -N 
-The key's randomart image is:
-+---[RSA 2048]----+
-|         oOB. .  |
-|       .o*=. = . |
-|       o++=*E.B.+|
-|      . +*+*+o+=+|
-|       .S.*. o o.|
-|          . . .  |
-|           . o   |
-|            + +  |
-|           o o   |
-+----[SHA256]-----+
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-$ chmod 700 ~/.ssh
-$ chmod 600 ~/.ssh/id_rsa.pub
-
-### => The following should not be necessary 
-### => since home directory of PF-GPFS system user is syncronized with filetransfer server
-### [*] Transfer RSA public key file from server B to server A
-### $ scp ~/.ssh/id_rsa.pub ikeda-em@cryoem-filetransfer.kek.jp:~/.ssh/id_rsa.pub
-### <PASSWORD>
-### $ 
-
-[*] Setup RSA key on server A
-$ ssh ikeda-em@cryoem-filetransfer.kek.jp
-<PASSWORD>
-$ 
-$ cd ~/.ssh
-$ cat id_rsa.pub >> authorized_keys
-$
-$ chmod 700 ~/.ssh
-$ chmod 600 ~/.ssh/authorized_keys
-$
-$ exit
-$ ssh -v ikeda-em@cryoem-filetransfer.kek.jp
-=> <PASSWORD> should not be asked!
-$ exit
-
-[*] Try rsync command without password
-$ 
-$ cd /gpfs/data/EM/ikeda-em/mrk_qa
-$ mkdir rsync_test
-$ cd /gpfs/data/EM/ikeda-em/mrk_qa/rsync_test
-$ 
-$ rsync -avzu -e 'ssh -i ~/.ssh/id_rsa' ikeda-em@cryoem-filetransfer.kek.jp:/media/test/falcon3/supervisor_20210825_151851/Images-Disc1/GridSquare_25529086/Data/*_Fractions.xml ./
-=> <PASSWORD> should not be asked!
-
 DEBUG_NOTES
 # 
 
@@ -112,10 +29,6 @@ if [[ ($# -gt 7 || $# -lt 4) && $# -ne 1 ]]; then
     echo "GoToFly(JK): Invalid number of arguments ($#)"
     usage_exit
 fi
-
-### # NOTE 2021/09/19 These should be input parameters
-### GTF_SRC_SESSION_DIR_NAME="supervisor_20210917_160225"
-### GTF_DST_MIC_DIR_RPATH="mrk_spa/20210917_MRK_DEBUG/Micrographs"
 
 # NOTE 2021/09/23 Must think how to generalize command options and the parameter settings 
 # so that this script can support multiple different Cryo-EM sites and on-the-fly systems
@@ -173,10 +86,14 @@ if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] Hello gtf_r
 if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] --------------------------------------------------"; fi
 
 ### # NOTE 2021/09/19 These should be stored in configuration file
-source ./gtf_global_variables.sh
+echo "GoToFly(JK): [GTF_DEBUG] Command name     : $0"
+GTF_SH_DIR=`cd $(dirname ${0}) && pwd`
+echo "GoToFly(JK): [GTF_DEBUG] GTF_SH_DIR : ${GTF_SH_DIR}"
+source ${GTF_SH_DIR}/gtf_global_variables.sh
 if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] Checking values of global environment variable..."; fi
 if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] "; fi
 if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_SYSTEM_CRYOEM_SITE_NAME=${GTF_SYSTEM_CRYOEM_SITE_NAME}"; fi
+if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_SYSTEM_OPERATOR_ID=${GTF_SYSTEM_OPERATOR_ID}"; fi
 if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_SYSTEM_USER_ID=${GTF_SYSTEM_USER_ID}"; fi
 if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] "; fi
 if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_SYSTEM_SRC_DOMAIN=${GTF_SYSTEM_SRC_DOMAIN}"; fi
@@ -194,7 +111,7 @@ if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_SYSTEM_
 if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] "; fi
 if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_SYSTEM_RSYNC_DST=${GTF_SYSTEM_RSYNC_DST}"; fi
 if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] "; fi
-if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_SYSTEM_DST_ORDERS_DEPOSIT_DIR_FPATH=${GTF_SYSTEM_DST_ORDERS_DEPOSIT_DIR_FPATH}"; fi
+if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_SYSTEM_DST_DEPOSITORY_DIR_FPATH=${GTF_SYSTEM_DST_DEPOSITORY_DIR_FPATH}"; fi
 if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] "; fi
 if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_SYSTEM_STATUS_CHECK_INTERVAL=${GTF_SYSTEM_STATUS_CHECK_INTERVAL}"; fi
 if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_SYSTEM_STATUS_DISPLAY_INTERVAL=${GTF_SYSTEM_STATUS_DISPLAY_INTERVAL}"; fi
@@ -202,8 +119,10 @@ if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_SYSTEM_
 if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_SYSTEM_TIME_OUT_MAX=${GTF_SYSTEM_TIME_OUT_MAX}"; fi
 if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] "; fi
 
-GTF_RSYNC_SRC=`echo ${GTF_SYSTEM_RSYNC_SRC/XXX_GTF_SRC_SESSION_DIR_NAME_XXXX/${GTF_SRC_SESSION_DIR_NAME}}`
-GTF_RSYNC_DST=`echo ${GTF_SYSTEM_RSYNC_DST/XXX_GTF_DST_MIC_DIR_RPATH_XXXX/${GTF_DST_MIC_DIR_RPATH}}`
+# GTF_RSYNC_SRC=`echo ${GTF_SYSTEM_RSYNC_SRC/XXX_GTF_SRC_SESSION_DIR_NAME_XXXX/${GTF_SRC_SESSION_DIR_NAME}}`
+# GTF_RSYNC_DST=`echo ${GTF_SYSTEM_RSYNC_DST/XXX_GTF_DST_MIC_DIR_RPATH_XXXX/${GTF_DST_MIC_DIR_RPATH}}`
+GTF_RSYNC_SRC="${GTF_SYSTEM_RSYNC_SRC/XXX_GTF_SRC_SESSION_DIR_NAME_XXXX/${GTF_SRC_SESSION_DIR_NAME}}"
+GTF_RSYNC_DST="${GTF_SYSTEM_RSYNC_DST/XXX_GTF_DST_MIC_DIR_RPATH_XXXX/${GTF_DST_MIC_DIR_RPATH}}"
 
 echo "GoToFly(JK): Starting synchronization of data..."
 echo "GoToFly(JK):   Source       : ${GTF_RSYNC_SRC}"
@@ -245,10 +164,14 @@ if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_START_S
 if [[ ${GTF_DEBUG_MODE} != 0 ]]; then echo "GoToFly(JK): [GTF_DEBUG] GTF_PREVIOUS_NEWEST_FILE_SEC_DATE=${GTF_PREVIOUS_NEWEST_FILE_SEC_DATE}"; fi
 while :
 do
-    # Syncronize contents of source and desitination
-    # NOTE (2021/09/19) WARNING! This requires RSA key pair settings!
-    rsync -avzu -e 'ssh -i ~/.ssh/id_rsa' ${GTF_RSYNC_SRC} ${GTF_RSYNC_DST} ||  {
-        # NOTE (2021/09/23) This part should set error flag (GTF_ERROR_CODE) and bread the loop
+    ### # Syncronize contents of source and desitination
+    ### # NOTE (2021/09/19) WARNING! This requires RSA key pair settings!
+    ### rsync -avzu -e 'ssh -i ~/.ssh/id_rsa' ${GTF_RSYNC_SRC} ${GTF_RSYNC_DST} ||  {
+    # NOTE (2021/10/07) With gotofly account, gtf_rsync_detector_server.sh will be executed on filetransfer server.
+    # PF-GPFS is mounted on filetransfer server!
+    # That's why RSA key pair is not required for gotofly account
+    rsync -rltvzu --chmod=F660,D770 ${GTF_RSYNC_SRC} ${GTF_RSYNC_DST} ||  {
+        # NOTE (2021/09/23) This part should set error flag (GTF_ERROR_CODE) and break the loop
         # Then, the script has a chance to do final common operation before exiting...
         echo "GoToFly(JK): [GTF_ERROR] rsync failed..."
         echo "GoToFly(JK): Exiting(1)..."

@@ -18,15 +18,15 @@ _rlnJobOptionValue #2
        box        512 
    ctf_win         -1 
       dast        100 
-     dfmax      50000 
+     dfmax      30000 
      dfmin       5000 
-    dfstep        500 
+    dfstep        100 
     do_EPA         No 
-do_ignore_ctffind_params        Yes 
+do_ignore_ctffind_params         No 
 do_phaseshift         No 
   do_queue         No 
 fn_ctffind_exe /gpfs/data/EM/software/ctffind-4.1.13/bin/ctffind 
-fn_gctf_exe /public/EM/Gctf/bin/Gctf 
+fn_gctf_exe /gpfs/data/EM/software/Gctf/Gctf 
    gpu_ids         "" 
 input_star_mics Schemes/prep/motioncorr/corrected_micrographs.star 
 min_dedicated         24 
@@ -39,11 +39,11 @@ phase_step         10
       qsub       qsub 
 qsubscript /public/EM/RELION/relion/bin/relion_qsub.csh 
  queuename    openmpi 
-    resmax          5 
+    resmax          4 
     resmin         30 
-slow_search         No 
-use_ctffind4        Yes 
-  use_gctf         No 
-use_given_ps        Yes 
+slow_search        Yes 
+use_ctffind4         No 
+  use_gctf        Yes 
+use_given_ps         No 
   use_noDW        Yes 
  
