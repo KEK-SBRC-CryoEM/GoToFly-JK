@@ -15,7 +15,7 @@ data_joboptions_values
 loop_ 
 _rlnJobOptionVariable #1 
 _rlnJobOptionValue #2 
-bg_diameter         -1 
+bg_diameter        242 
 black_dust         -1 
 coords_suffix Schemes/proc/autopick/autopick.star 
 do_cut_into_segments        Yes 

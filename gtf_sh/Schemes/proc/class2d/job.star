@@ -46,7 +46,7 @@ nr_threads         12
 offset_range          5 
 offset_step          1 
 other_args         "" 
-particle_diameter      214.0 
+particle_diameter      108.0 
 psi_sampling          6 
       qsub       qsub 
 qsubscript /public/EM/RELION/relion/bin/relion_qsub.csh 

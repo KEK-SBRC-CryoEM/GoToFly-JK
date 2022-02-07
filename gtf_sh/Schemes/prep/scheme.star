@@ -4,7 +4,7 @@
 data_scheme_general
 
 _rlnSchemeName                       Schemes/prep/
-_rlnSchemeCurrentNodeName            WAIT
+_rlnSchemeCurrentNodeName            motioncorr
  
 
 # version 30001
@@ -44,8 +44,8 @@ _rlnSchemeJobName #2
 _rlnSchemeJobMode #3 
 _rlnSchemeJobHasStarted #4 
    ctffind    ctffind   continue            0 
-importmovies importmovies   continue            0 
-motioncorr motioncorr   continue            0 
+importmovies Import/job001/   continue            1 
+motioncorr MotionCorr/job002/   continue            1 
  
 
 # version 30001

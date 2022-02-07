@@ -33,7 +33,7 @@ nr_classes          3
    nr_pool         30 
 nr_threads         12 
 other_args         "" 
-particle_diameter      214.0 
+particle_diameter      108.0 
       qsub       qsub 
 qsubscript /public/EM/RELION/relion/bin/relion_qsub.csh 
  queuename    openmpi 

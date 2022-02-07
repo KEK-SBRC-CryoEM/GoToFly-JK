@@ -15,7 +15,7 @@ data_joboptions_values
 loop_ 
 _rlnJobOptionVariable #1 
 _rlnJobOptionValue #2 
-   bfactor        150 
+   bfactor        200 
 bin_factor          1 
 do_dose_weighting        Yes 
 do_float16        Yes 
